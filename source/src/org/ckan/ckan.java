@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.ckan.client.Client;
 import org.ckan.client.Connection;
+import org.ckan.client.localidata.Constants;
 import org.ckan.client.result.impl.DataStore;
 import org.ckan.client.result.impl.Field;
 import org.ckan.client.result.impl.Resource;
@@ -26,6 +27,9 @@ import org.pentaho.di.trans.step.StepMetaInterface;
 
 
 public class ckan extends BaseStep implements StepInterface {
+	
+	final int timeout = Constants.timeout;
+	
 	private ckanData data;
 	private ckanMeta meta;
 	
@@ -212,14 +216,14 @@ public class ckan extends BaseStep implements StepInterface {
 		if (log.isBasic()) logBasic("Temporal file generated");
     	    
     	    try
-    	    {
-	    	    if (ckanResourceId.equals(""))
+    	    {   
+				if (ckanResourceId.equals(""))
 	    	    {			
 	    	    	if (log.isBasic()) logBasic("Creating resource");
-	    	    	ckanClient.createResourceFromFile(ckanPackageId, temp.getAbsolutePath(), ckanResourceTitle, "CSV", ckanResourceDescription, 60000);
+	    	    	ckanClient.createResourceFromFile(ckanPackageId, temp.getAbsolutePath(), ckanResourceTitle, "CSV", ckanResourceDescription, timeout);
 	    	    }else{	    	    	
 	    	    	if (log.isBasic()) logBasic("Updating resource");
-	    	    	ckanClient.updateResource(ckanResourceId, ckanPackageId, temp.getAbsolutePath(), ckanResourceTitle, "CSV",  ckanResourceDescription, 60000);
+	    	    	ckanClient.updateResource(ckanResourceId, ckanPackageId, temp.getAbsolutePath(), ckanResourceTitle, "CSV",  ckanResourceDescription, timeout);
 	    	    }
     	    }
     	    catch (Exception e)
