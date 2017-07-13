@@ -32,9 +32,7 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 	private String PackageId;
 	private String ResourceTitle;
 	private String ResourceDescription;
-	private String ResourceId;
-	private String BatchSize;
-	private String PrimaryKey;
+	private String ResourceId;	
 
 	public ckanMeta() {
 		super(); // allocate BaseStepInfo
@@ -67,13 +65,7 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 		return ResourceId;
 	}
 
-	public String getBatchSize() {
-		return BatchSize;
-	}
 	
-	public String getPrimaryKey() {
-		return PrimaryKey;
-	}
 	
 	/**
 	 * @param value	The value to set.
@@ -102,13 +94,7 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 		this.ResourceId = ResourceId;
 	}
 	
-	public void setBatchSize(String BatchSize) {
-		this.BatchSize = BatchSize;
-	}
 	
-	public void setPrimaryKey(String PrimaryKey) {
-		this.PrimaryKey = PrimaryKey;
-	}
 	
 	// Set sensible defaults for a new step
 	public void setDefault() {
@@ -117,9 +103,7 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 		PackageId = "";
 		ResourceTitle = "Untitled";
 		ResourceDescription = "";
-		ResourceId = "";
-		BatchSize = "5000";
-		PrimaryKey = "";
+		ResourceId = "";		
 	}
 
 	public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {
@@ -140,9 +124,7 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 		retval.append("    ").append(XMLHandler.addTagValue("package_id", PackageId));
 		retval.append("    ").append(XMLHandler.addTagValue("resource_title", ResourceTitle));
 		retval.append("    ").append(XMLHandler.addTagValue("resource_description", ResourceDescription));
-		retval.append("    ").append(XMLHandler.addTagValue("resource_id", ResourceId));
-		retval.append("    ").append(XMLHandler.addTagValue("batch_size", BatchSize));
-		retval.append("    ").append(XMLHandler.addTagValue("primary_key", PrimaryKey));
+		retval.append("    ").append(XMLHandler.addTagValue("resource_id", ResourceId));		
 
 		return retval.toString();
 	}
@@ -155,8 +137,6 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 			ResourceTitle = XMLHandler.getTagValue(stepnode, "resource_title");
 			ResourceDescription = XMLHandler.getTagValue(stepnode, "resource_description");
 			ResourceId = XMLHandler.getTagValue(stepnode, "resource_id");
-			BatchSize = XMLHandler.getTagValue(stepnode, "batch_size");
-			PrimaryKey = XMLHandler.getTagValue(stepnode, "primary_key");
 		} catch (Exception e) {
 			throw new KettleXMLException("Template Plugin Unable to read step info from XML node", e);
 		}
@@ -169,9 +149,7 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 			PackageId = rep.getStepAttributeString(id_step, "package_id");
 			ResourceTitle = rep.getStepAttributeString(id_step, "resource_title");
 			ResourceDescription = rep.getStepAttributeString(id_step, "resource_description");
-			ResourceId = rep.getStepAttributeString(id_step, "resource_id");
-			BatchSize = rep.getStepAttributeString(id_step, "batch_size");
-			PrimaryKey = rep.getStepAttributeString(id_step, "primary_key");
+			ResourceId = rep.getStepAttributeString(id_step, "resource_id");			
 		} catch (Exception e) {
 			throw new KettleException("Unexpected error reading step with id_step=" + id_step + " from the repository", e);
 		}
@@ -184,9 +162,7 @@ public class ckanMeta extends BaseStepMeta implements StepMetaInterface {
 			rep.saveStepAttribute(id_transformation, id_step, "package_id", PackageId);
 			rep.saveStepAttribute(id_transformation, id_step, "resource_title", ResourceTitle);
 			rep.saveStepAttribute(id_transformation, id_step, "resource_description", ResourceDescription);
-			rep.saveStepAttribute(id_transformation, id_step, "resource_id", ResourceId);
-			rep.saveStepAttribute(id_transformation, id_step, "batch_size", BatchSize);
-			rep.saveStepAttribute(id_transformation, id_step, "primary_key", PrimaryKey);
+			rep.saveStepAttribute(id_transformation, id_step, "resource_id", ResourceId);			
 		} catch (Exception e) {
 			throw new KettleException("Unable to save step information to the repository, id_step=" + id_step, e);
 		}

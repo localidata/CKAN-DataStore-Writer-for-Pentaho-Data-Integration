@@ -1,10 +1,19 @@
 package org.ckan;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.ckan.client.Client;
+import org.ckan.client.Connection;
+import org.ckan.client.result.impl.DataStore;
+import org.ckan.client.result.impl.Field;
+import org.ckan.client.result.impl.Resource;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.Trans;
@@ -14,13 +23,6 @@ import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
-import org.CKANclient.CKANException;
-import org.CKANclient.Client;
-import org.CKANclient.Connection;
-import org.CKANclient.Dataset;
-import org.CKANclient.DataStore;
-import org.CKANclient.Field;
-import org.CKANclient.Resource;
 
 
 public class ckan extends BaseStep implements StepInterface {
@@ -32,16 +34,9 @@ public class ckan extends BaseStep implements StepInterface {
 	private String ckanPackageId = "";
 	private String ckanResourceTitle = "";
 	private String ckanResourceDescription = "";
-	private String ckanResourceId = "";
-	private int ckanBatchSize = 5000;
-	private List<String> ckanPrimaryKeyList = new ArrayList<String>();
-	private String outputResourceId = "";
-	
-	private boolean primaryKeyExists = false;
+	private String ckanResourceId = "";	
 	private int fieldLength = 0;
-	private int rowCount = 0;
 	
-	private List<String> primaryKeyField = new ArrayList<String>();
 	private List<Field> fields = new ArrayList<Field>();
 	private LinkedHashMap<String, Object> dataRow = new LinkedHashMap<String, Object>();
 	private List<LinkedHashMap<String, Object>> records = new ArrayList<LinkedHashMap<String, Object>>();
@@ -51,28 +46,26 @@ public class ckan extends BaseStep implements StepInterface {
 		super(s,stepDataInterface,c,t,dis);
 	}
 	
-	public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {
+	public synchronized boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {
 		meta = (ckanMeta)smi;
 		data = (ckanData)sdi;
 		
 		String fieldName = "";
 		String fieldType = "";
 		int indexOfValue = 0;
-		String fieldValue = "";
+		String fieldValue = "";		
 		
 		// Get row, blocks when needed!
 		Object[] r = getRow();
 		
 		// No more input to be expected...
-		if (r==null) {
-			if (rowCount % ckanBatchSize != 0) {
-				uploadDataStore(records);
-			}
+		if (r==null) {			
+			uploadResource(records);
 			setOutputDone();
 			return false;
 		}
 		
-		if (first) {
+		if (first) {			
 			first = false;
 			
 			// Determine output field structure
@@ -87,36 +80,26 @@ public class ckan extends BaseStep implements StepInterface {
 				
 				if (fieldType.equals("(Integer)") || fieldType.equals("(Number)")) {
 					fields.add(new Field(fieldName, "numeric"));
+					
 				}
 				else if (fieldType.equals("(Date)")) {
 					fields.add(new Field(fieldName, "timestamp"));
+					
 				}
 				else {
 					fields.add(new Field(fieldName, "text"));
+					
 				}
 			}
 			
-			List<String> fieldList = Arrays.asList(data.outputRowMeta.getFieldNames());
-			if ( fieldList.containsAll(ckanPrimaryKeyList) && !(ckanPrimaryKeyList.isEmpty()) ) {
-				primaryKeyExists = true;
-				if (log.isBasic()) logBasic("Primary Key found, upserting data.");
-			}
-			else {
-				if (log.isBasic()) logBasic("Primary Key not found, inserting data.");
-			}
 			
-			// Create or update a DataStore resource
-			newDataStoreResorce(fields);
 			
-			if (outputResourceId.length() == 0) {
-				// Unable to upload data, so end early
-				if (log.isBasic()) logError("No valid resource ID to upload data to.");
-				setOutputDone();
-				return false;
-			}
+		
+			
 		}
 		
-		rowCount++;
+		
+		
 		dataRow = new LinkedHashMap<String, Object>();
 		for(int i=0; i < fieldLength; i++) {
 			fieldName = data.outputRowMeta.getFieldNames()[i];
@@ -128,12 +111,6 @@ public class ckan extends BaseStep implements StepInterface {
 		}
 		
 		records.add(dataRow);
-		
-		// Upload data in batches every 5000 rows
-		if (rowCount % ckanBatchSize == 0) {
-			uploadDataStore(records);
-			records = new ArrayList<LinkedHashMap<String, Object>>();
-		}
 		
 		// Copy row to possible alternate rowset(s)
 		putRow(data.outputRowMeta, r);
@@ -175,16 +152,6 @@ public class ckan extends BaseStep implements StepInterface {
 			ckanResourceId = meta.getResourceId();
 		}
 		
-		try {
-			ckanBatchSize = Integer.parseInt(meta.getBatchSize());
-		} catch (NumberFormatException e) {
-			if (log.isBasic()) logBasic("Batch Size [" + meta.getBatchSize() + "] was not valid, set to 5000");
-		    ckanBatchSize = 5000;
-		}
-		
-		if (meta.getPrimaryKey() != null) {
-			ckanPrimaryKeyList = Arrays.asList(meta.getPrimaryKey().split("\\s*;;\\s*"));
-		}
 		
 		return super.init(smi, sdi);
 	}
@@ -196,75 +163,86 @@ public class ckan extends BaseStep implements StepInterface {
 		super.dispose(smi, sdi);
 	}
 	
-	public boolean newDataStoreResorce(List<Field> fields) {
+	
+	
+	public boolean uploadResource(List<LinkedHashMap<String, Object>> records) {
+		
+		if (log.isBasic()) logBasic("Uploading resource with " + records.size()+ " records");
+		
 		Client ckanClient = new Client( new Connection(ckanDomain), ckanApiKey);
+		File temp = null;
+		
 		
 		try {
-			DataStore ds = new DataStore();
-			
-			if (ckanResourceId.length() != 0) {
-				ds.setResource_id(ckanResourceId);
-			}
-			else {
-				Resource rs = new Resource();
-				rs.setPackage_id(ckanPackageId);
-				rs.setName(ckanResourceTitle);
-				rs.setDescription(ckanResourceDescription);
-				rs.setFormat("CSV");
-				ds.setResource(rs);
-			}
-			
-			ds.setFields(fields);
-			ds.setForce("True");
-			
-			if (primaryKeyExists) {
-				for (int i=0; i<ckanPrimaryKeyList.size();i++){
-					primaryKeyField.add(ckanPrimaryKeyList.get(i));
+						
+			String titles="";
+			StringBuffer lines=new StringBuffer();
+			for (LinkedHashMap<String, Object> record:records)
+			{
+				if ("".equals(titles))
+				{
+					for (String key : record.keySet())
+					{
+						titles+=key+",";
+					}
+					titles=titles.replaceFirst(".$","")+System.getProperty("line.separator");
 				}
-				ds.setPrimary_key(primaryKeyField);
-			}	
+				String tempLine="";
+				for (String key : record.keySet()){
+					tempLine+=record.get(key)+",";									
+		        }
+				lines.append(tempLine.replaceFirst(".$","")+System.getProperty("line.separator"));
+			}
 			
-			DataStore result = ckanClient.createDataStore(ds);
-			outputResourceId = result.getResource_id();
-			if (log.isBasic()) logBasic("Uploading to Resource ID: " + outputResourceId);
+		
+			 //create a temp file
+    	    temp = File.createTempFile(ckanResourceTitle, ".csv");
+
+    	    //write it
+    	    BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+    	    bw.write(titles);
+    	    bw.write(lines.toString());    	    
+    	    bw.close();
+    	    
+		} catch ( Exception e ) {
+			logError("Error generating the temp file",e);
+			return false;
+		}
+		
+		if (log.isBasic()) logBasic("Temporal file generated");
+    	    
+    	    try
+    	    {
+	    	    if (ckanResourceId.equals(""))
+	    	    {			
+	    	    	if (log.isBasic()) logBasic("Creating resource");
+	    	    	ckanClient.createResourceFromFile(ckanPackageId, temp.getAbsolutePath(), ckanResourceTitle, "CSV", ckanResourceDescription, 60000);
+	    	    }else{	    	    	
+	    	    	if (log.isBasic()) logBasic("Updating resource");
+	    	    	ckanClient.updateResource(ckanResourceId, ckanPackageId, temp.getAbsolutePath(), ckanResourceTitle, "CSV",  ckanResourceDescription, 60000);
+	    	    }
+    	    }
+    	    catch (Exception e)
+    	    {
+    	    	if (log.isBasic()) {
+    	    		if (ckanResourceId.equals(""))
+    	    	    {
+    	    			logError ("Error creating the resource");
+    	    	    }
+    	    		else{
+    	    			logError ("Error updating the resource, please check the ID");
+    	    		}
+    	    	}
+    	    	return false;
+    	    }
+			
+			
+			
 			return true;
-		} catch ( CKANException cke ) {
-			logError(cke.toString());
-			return false;
-		}
-		catch ( Exception e ) {
-			logError(e.toString());
-			return false;
-		}
+		
 	}
 	
-	public boolean uploadDataStore(List<LinkedHashMap<String, Object>> records) {
-		Client ckanClient = new Client( new Connection(ckanDomain), ckanApiKey);
-		
-		try {
-			DataStore ds = new DataStore();
-			
-			ds.setRecords(records);
-			ds.setResource_id(outputResourceId);
-			ds.setForce("True");
-			if (primaryKeyExists) {
-				ds.setMethod("upsert");
-				if (log.isBasic()) logBasic("Upserting data...");
-			}
-			else {
-				ds.setMethod("insert");
-				if (log.isBasic()) logBasic("Inserting data...");
-			}
-			
-			DataStore result = ckanClient.upsertDataStore(ds,3);
-			return true;
-		} catch ( CKANException cke ) {
-			logError(cke.toString());
-			return false;
-		}
-		catch ( Exception e ) {
-			logError(e.toString());
-			return false;
-		}
-	}
+	
+	
+	
 }

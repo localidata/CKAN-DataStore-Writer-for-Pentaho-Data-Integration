@@ -63,16 +63,7 @@ public class ckanDialog extends BaseStepDialog implements StepDialogInterface
 	private Text		wResourceId;
 	private FormData	fdlResourceId, fdResourceId;
 	
-	private Group		AdvancedSettings;
-	private FormData	fdAdvancedSettings;
-
-	private Label		wlBatchSize;
-	private Text		wBatchSize;
-	private FormData	fdlBatchSize, fdBatchSize;
 	
-	private Label		wlPrimaryKey;
-	private Text		wPrimaryKey;
-	private FormData	fdlPrimaryKey, fdPrimaryKey;
 	
 	private static final Pattern NONLATIN = Pattern.compile("[^\\w-]");
 	private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
@@ -263,53 +254,9 @@ public class ckanDialog extends BaseStepDialog implements StepDialogInterface
 		wResourceId.setLayoutData(fdResourceId);
 		
 		
-		// Advanced Settings Group
-		AdvancedSettings = new Group(shell, SWT.NONE);
-		AdvancedSettings.setText("Advanced Settings");
-		fdAdvancedSettings=new FormData();
-		fdAdvancedSettings.left = new FormAttachment(0, 0);
-		fdAdvancedSettings.right= new FormAttachment(100, 0);
-		fdAdvancedSettings.top  = new FormAttachment(ResourceDetails, margin+20);
-		AdvancedSettings.setLayoutData(fdAdvancedSettings);
-		
-		formLayout = new FormLayout ();
-		formLayout.marginWidth  = Const.FORM_MARGIN;
-		formLayout.marginHeight = Const.FORM_MARGIN;
-		AdvancedSettings.setLayout(formLayout);
+	
 
-		// BatchSize line
-		wlBatchSize=new Label(AdvancedSettings, SWT.RIGHT);
-		wlBatchSize.setText(Messages.getString("ckanDialog.BatchSize.Label")); //$NON-NLS-1$
-		fdlBatchSize=new FormData();
-		fdlBatchSize.left = new FormAttachment(0, 0);
-		fdlBatchSize.right= new FormAttachment(middle, -margin);
-		fdlBatchSize.top  = new FormAttachment(0, margin);
-		wlBatchSize.setLayoutData(fdlBatchSize);
 		
-		wBatchSize=new Text(AdvancedSettings, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-		wBatchSize.addModifyListener(lsMod);
-		fdBatchSize=new FormData();
-		fdBatchSize.left = new FormAttachment(middle, 0);
-		fdBatchSize.right= new FormAttachment(100, 0);
-		fdBatchSize.top  = new FormAttachment(0, margin);
-		wBatchSize.setLayoutData(fdBatchSize);
-
-		// PrimaryKey line
-		wlPrimaryKey=new Label(AdvancedSettings, SWT.RIGHT);
-		wlPrimaryKey.setText(Messages.getString("ckanDialog.PrimaryKey.Label")); //$NON-NLS-1$
-		fdlPrimaryKey=new FormData();
-		fdlPrimaryKey.left = new FormAttachment(0, 0);
-		fdlPrimaryKey.right= new FormAttachment(middle, -margin);
-		fdlPrimaryKey.top  = new FormAttachment(wBatchSize, margin);
-		wlPrimaryKey.setLayoutData(fdlPrimaryKey);
-		
-		wPrimaryKey=new Text(AdvancedSettings, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-		wPrimaryKey.addModifyListener(lsMod);
-		fdPrimaryKey=new FormData();
-		fdPrimaryKey.left = new FormAttachment(middle, 0);
-		fdPrimaryKey.right= new FormAttachment(100, 0);
-		fdPrimaryKey.top  = new FormAttachment(wBatchSize, margin);
-		wPrimaryKey.setLayoutData(fdPrimaryKey);
 		
 		
 		// Some buttons
@@ -318,7 +265,7 @@ public class ckanDialog extends BaseStepDialog implements StepDialogInterface
 		wCancel=new Button(shell, SWT.PUSH);
 		wCancel.setText(Messages.getString("System.Button.Cancel")); //$NON-NLS-1$
 
-		BaseStepDialog.positionBottomButtons(shell, new Button[] {wOK, wCancel}, margin, AdvancedSettings);
+		BaseStepDialog.positionBottomButtons(shell, new Button[] {wOK, wCancel}, margin, null);
 		
 		// Add listeners
 		lsCancel = new Listener() {
@@ -343,8 +290,6 @@ public class ckanDialog extends BaseStepDialog implements StepDialogInterface
 		wTitle.addSelectionListener(lsDef);
 		wDescription.addSelectionListener(lsDef);
 		wResourceId.addSelectionListener(lsDef);
-		wBatchSize.addSelectionListener(lsDef);
-		wPrimaryKey.addSelectionListener(lsDef);
 		
 		// Detect X or ALT-F4 or something that kills this window...
 		shell.addShellListener(new ShellAdapter() { public void shellClosed(ShellEvent e) { cancel(); } } );
@@ -395,13 +340,7 @@ public class ckanDialog extends BaseStepDialog implements StepDialogInterface
 			wResourceId.setText(input.getResourceId());	
 		}
 		
-		if (input.getBatchSize() != null) {
-			wBatchSize.setText(input.getBatchSize());	
-		}
 		
-		if (input.getPrimaryKey() != null) {
-			wPrimaryKey.setText(input.getPrimaryKey());	
-		}
 	}
 	
 	private void cancel()
@@ -434,27 +373,14 @@ public class ckanDialog extends BaseStepDialog implements StepDialogInterface
 		String description = wDescription.getText().trim();
 		String resourceId = wResourceId.getText().trim();
 		
-		String batchSize = wBatchSize.getText().trim();
-		try {
-			int validSize = Integer.parseInt(batchSize);
-			if ( !(validSize > 0) ) {
-				batchSize = "5000";
-			}
-		} catch (NumberFormatException e) {
-			batchSize = "5000";
-		}
 		
-		String primaryKey = wPrimaryKey.getText().trim();
-	
 		input.setDomain(domain);
 		input.setApiKey(apiKey);
 		input.setPackageId(packageId);
 		input.setResourceTitle(title);
 		input.setResourceDescription(description);
 		input.setResourceId(resourceId);
-		input.setBatchSize(batchSize);
-		input.setPrimaryKey(primaryKey);
-		
+	
 		dispose();
 	}
 	
