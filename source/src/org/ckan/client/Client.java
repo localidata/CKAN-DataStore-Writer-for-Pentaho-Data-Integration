@@ -59,7 +59,7 @@ import org.ckan.client.result.list.impl.LicenceList;
 import org.ckan.client.result.list.impl.RevisionList;
 import org.ckan.client.result.list.impl.StringList;
 import org.ckan.client.result.list.impl.UserList;
-
+import org.pentaho.di.core.logging.LogChannelInterface;
 
 import com.google.gson.Gson;
 
@@ -893,25 +893,13 @@ public final class Client
     }
     
     
-    public String createResourceFromFile (String dataSetID, String path, String label, String format) throws Exception
-    {    	
-    	return ResourceUtils.uploadResource(this.connection,dataSetID, path, label, format );    	
-    }
     
     public boolean createResourceFromFile (String dataSetID, String path, String label, String format, String description, int timeout) throws Exception
     {    	
-    	return ResourceUtils.uploadResource(this.connection,dataSetID, path, label, format,description, timeout);    	
+    	return ResourceUtils.createResource(this.connection,dataSetID, path, label, format,description, timeout);    	
     }
     
-    public String deleteResource (String resourceId) throws Exception
-    {    	
-    	return ResourceUtils.deleteResource(this.connection,resourceId );    	
-    }
     
-    public String deleteResource (String resourceId, int timeout) throws Exception
-    {    	
-    	return ResourceUtils.deleteResource(this.connection,resourceId,timeout );    	
-    }
     
     public boolean updateResource (String resourceID, String dataSetID, String path, String label, String format, String description, int timeout) throws Exception
     {    

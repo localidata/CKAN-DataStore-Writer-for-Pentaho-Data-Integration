@@ -22,7 +22,7 @@ Drag and drop the CKAN DataStore Upload step from the output category to the wor
 Link another step to the CKAN Resource Resource step to upload the output of the previous step.
 
 ### Options
-To create an new Datastore resource provide a valid Package ID and omit the Resource ID
+To create an new resource provide a valid Package ID and omit the Resource ID
 
 | Option         | Description                                                                                             |
 | -------------- | ------------------------------------------------------------------------------------------------------- |

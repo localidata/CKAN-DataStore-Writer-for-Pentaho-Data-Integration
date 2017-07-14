@@ -355,9 +355,7 @@ public class ckanDialog extends BaseStepDialog implements StepDialogInterface
 		stepname = wStepname.getText(); // return value
 		
 		String domain = wDomain.getText().trim();
-		if (!domain.startsWith("http://")) {
-			domain = "http://" + domain;
-		}
+		
 		while (domain.endsWith("/")) {
 			domain = domain.substring(0,domain.length()-1);
 		}
