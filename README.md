@@ -37,11 +37,5 @@ To create an new resource provide a valid Package ID and omit the Resource ID
 
 
 ### PDI Sample Transformation
-Soon
-
-### Install the plugin using your own PDI Marketplace
-Soon too
-
-### Publish Plugin to Official PDI Markeplace
-Soon again
+You can find an article (spanish) in our blog: http://blog.localidata.com/2017/07/como-actualizar-recursos-de-ckan-traves.html
 
