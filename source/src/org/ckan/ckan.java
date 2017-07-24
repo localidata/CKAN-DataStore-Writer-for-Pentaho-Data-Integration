@@ -171,7 +171,7 @@ public class ckan extends BaseStep implements StepInterface {
 	
 	public boolean uploadResource(List<LinkedHashMap<String, Object>> records) {
 		
-		if (log.isBasic()) logBasic("Uploading resource with " + records.size()+ " records");
+		if (log.isBasic()) logBasic("Uploading resource with " + records.size()+ " records to "+ckanDomain);
 		
 		Client ckanClient = new Client( new Connection(ckanDomain), ckanApiKey);
 		File temp = null;
@@ -231,11 +231,13 @@ public class ckan extends BaseStep implements StepInterface {
     	    	if (log.isBasic()) {
     	    		if (ckanResourceId.equals(""))
     	    	    {
-    	    			logError ("Error creating the resource");
+    	    			logError ("Error creating the resource");    	    			
     	    	    }
     	    		else{
-    	    			logError ("Error updating the resource, please check the ID");
-    	    		}
+    	    			logError ("Error updating the resource");    	    			
+    	    		}    	    		
+    	    		logError("Exception: "+e.getClass().getSimpleName());
+    	    		logError("Message: "+e.getMessage());    	    			
     	    	}
     	    	return false;
     	    }

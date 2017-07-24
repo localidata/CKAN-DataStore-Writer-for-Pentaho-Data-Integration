@@ -92,8 +92,9 @@ public class ResourceUtils {
 			out.close();
 		}
 		
-		if (error)
+		if (error){
 			throw new Exception("Error uploading resource");
+		}
 		
 		
 
@@ -175,12 +176,14 @@ public class ResourceUtils {
 		}
 		finally {
 			if ((out!=null))
+			{
 				out.close();
+			}			
 		}
 		
-		if (error)
-			//throw new Exception("Error uploading resource");
-			return false;
+		if (error){
+			throw new Exception("Error uploading resource");			
+		}
 		
 		BufferedReader responseBuffer = new BufferedReader(new InputStreamReader((connection.getInputStream())));
 		
