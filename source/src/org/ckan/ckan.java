@@ -1,20 +1,18 @@
 package org.ckan;
 
-import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.ckan.client.Client;
 import org.ckan.client.Connection;
 import org.ckan.client.localidata.Constants;
-import org.ckan.client.result.impl.DataStore;
 import org.ckan.client.result.impl.Field;
-import org.ckan.client.result.impl.Resource;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.Trans;
@@ -198,15 +196,12 @@ public class ckan extends BaseStep implements StepInterface {
 				lines.append(tempLine.replaceFirst(".$","")+System.getProperty("line.separator"));
 			}
 			
-		
-			 //create a temp file
-    	    temp = File.createTempFile(ckanResourceTitle, ".csv");
+				
 
     	    //write it
-    	    BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-    	    bw.write(titles);
-    	    bw.write(lines.toString());    	    
-    	    bw.close();
+    	    temp=genTempFile(titles, lines);
+    	    
+    	    
     	    
 		} catch ( Exception e ) {
 			logError("Error generating the temp file",e);
@@ -246,6 +241,26 @@ public class ckan extends BaseStep implements StepInterface {
 			
 			return true;
 		
+	}
+
+	/*Function that generates a temp File with UTF-8 with BOM encoding*/
+	private File genTempFile(String titles, StringBuffer lines) throws IOException, UnsupportedEncodingException {
+		
+		 //create a temp file
+	    File temp = File.createTempFile(ckanResourceTitle, ".csv");
+		
+		byte[] bytes = null;
+		byte[] bomBytes = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(bomBytes);
+		outputStream.write(titles.getBytes("UTF-8"));
+		outputStream.write(lines.toString().getBytes("UTF-8"));
+		bytes = outputStream.toByteArray();    	    
+		FileUtils.writeByteArrayToFile(temp, bytes);
+		
+		return temp;
 	}
 	
 	
