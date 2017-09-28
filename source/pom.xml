@@ -9,7 +9,7 @@
 		<repositories>
 			<repository>
 				<id>pentaho-releases</id>
-				<url>http://repository.pentaho.org/content/groups/omni/pentaho</url>
+				<url>http://nexus.pentaho.org/content/groups/omni/pentaho</url>
 			</repository>
 		</repositories>
 		<dependencies>
