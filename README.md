@@ -37,5 +37,9 @@ To create an new resource provide a valid Package ID and omit the Resource ID
 
 
 ### PDI Sample Transformation
-You can find an article (spanish) in our blog: http://blog.localidata.com/2017/07/como-actualizar-recursos-de-ckan-traves.html
+You can find an article (spanish) in our web: https://www.localidata.com/como-actualizar-recursos-de-ckan-a-traves-de-pentaho-data-integration/
 
+### Tests
+We are tested this plugin with Pentaho Data Integration 7.1 and 8.2
+
+Note: the tests agains https://demo.ckan.org always return a 403 error, but in another enviroments everything works
